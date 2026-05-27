@@ -1,27 +1,29 @@
-name: Deploy to CodeDeploy
+name: Upload ZIP to S3
 
 on:
   push:
     branches:
       - main
+
 jobs:
-  deploy:
+  upload-zip:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Create deployment
+      - name: Create ZIP
         run: |
-          aws deploy create-deployment \
-            --application-name MyApp \
-            --deployment-group-name MyDeploymentGroup \
-            --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
+          zip -r app.zip .
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp app.zip s3://gluegluetest20260515-test/deploy/app.zip
